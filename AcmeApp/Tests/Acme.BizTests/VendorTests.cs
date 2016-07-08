@@ -63,7 +63,7 @@ namespace Acme.Biz.Tests
             // Arrange
             var vendor = new Vendor();
             var product = new Product(1, "Saw", "");
-            var expected = new OperationResult(true,
+            var expected = new OperationResult<bool>(true,
                 "Order from Acme, Inc\r\nProduct: Saw\r\nQuantity: 12" +
                                      "\r\nInstructions: standard delivery");
 
@@ -71,7 +71,7 @@ namespace Acme.Biz.Tests
             var actual = vendor.PlaceOrder(product, 12);
 
             // Assert
-            Assert.AreEqual(expected.Success, actual.Success);
+            Assert.AreEqual(expected.Result, actual.Result);
             Assert.AreEqual(expected.Message, actual.Message);
         }
         [TestMethod()]
@@ -80,9 +80,9 @@ namespace Acme.Biz.Tests
             // Arrange
             var vendor = new Vendor();
             var product = new Product(1, "Saw", "");
-            var expected = new OperationResult(true,
+            var expected = new OperationResult<bool>(true,
                 "Order from Acme, Inc\r\nProduct: Saw\r\nQuantity: 12" +
-                "\r\nDeliver By: " + new DateTime(2018,10,25).ToString("d") +
+                "\r\nDeliver By: " + new DateTime(2018, 10, 25).ToString("d") +
                 "\r\nInstructions: standard delivery");
 
             // Act
@@ -90,7 +90,7 @@ namespace Acme.Biz.Tests
                 new DateTimeOffset(2018, 10, 25, 0, 0, 0, new TimeSpan(-7, 0, 0)));
 
             // Assert
-            Assert.AreEqual(expected.Success, actual.Success);
+            Assert.AreEqual(expected.Result, actual.Result);
             Assert.AreEqual(expected.Message, actual.Message);
         }
 
@@ -114,7 +114,7 @@ namespace Acme.Biz.Tests
             // Arrange
             var vendor = new Vendor();
             var product = new Product(1, "Saw", "");
-            var expected = new OperationResult(true,
+            var expected = new OperationResult<bool>(true,
                         "Order from Acme, Inc\r\nProduct: Saw\r\nQuantity: 12" +
                         "\r\nInstructions: Deliver to Suite 42");
 
@@ -123,7 +123,7 @@ namespace Acme.Biz.Tests
                                 instructions: "Deliver to Suite 42");
 
             // Assert
-            Assert.AreEqual(expected.Success, actual.Success);
+            Assert.AreEqual(expected.Result, actual.Result);
             Assert.AreEqual(expected.Message, actual.Message);
         }
 
@@ -141,6 +141,56 @@ namespace Acme.Biz.Tests
 
             // Assert
             Assert.AreEqual(expected, actual);
+        }
+
+        [TestMethod()]
+        public void SendEmailListTest()
+        {
+            var vendorRepo = new VendorRepository();
+            var vendorsCollection = vendorRepo.Retrieve();
+
+            var expected = new List<String>(){
+                "Message sent: Important message for: ABC Corp",
+                "Message sent: Important message for: XYZ Corp"};
+
+            var actual = Vendor.SendEmail(vendorsCollection.ToList(), "Test Message");
+
+            CollectionAssert.AreEqual(expected, actual);
+        }
+
+        [TestMethod()]
+        public void SendEmailArrayTest()
+        {
+            var vendorRepo = new VendorRepository();
+            var vendorsCollection = vendorRepo.Retrieve();
+
+            var expected = new List<String>(){
+                "Message sent: Important message for: ABC Corp",
+                "Message sent: Important message for: XYZ Corp"};
+
+            var actual = Vendor.SendEmail(vendorsCollection.ToArray(), "Test Message");
+
+            CollectionAssert.AreEqual(expected, actual);
+        }
+
+        [TestMethod()]
+        public void SendEmailDictionaryTest()
+        {
+            var vendorRepo = new VendorRepository();
+            var vendorsCollection = vendorRepo.Retrieve();
+
+            var expected = new List<String>(){
+                "Message sent: Important message for: ABC Corp",
+                "Message sent: Important message for: XYZ Corp"};
+
+
+            //Can also be written as:
+            //vendorsCollection.ToDictionary(delegate(Vendor vendor) { return vendor.CompanyName; });
+            var vendors = vendorsCollection.ToDictionary(e => e.CompanyName);
+
+            var actual = Vendor.SendEmail(vendors.Values, "Test Message");
+
+            CollectionAssert.AreEqual(expected, actual);
         }
     }
 }
